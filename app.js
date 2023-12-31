@@ -1,5 +1,5 @@
 const express = require("express");
-const app = express()
+const app = express();
 const mongoose = require("mongoose");
 const connectToDB = require("./database");
 const cors = require("cors");
@@ -7,47 +7,43 @@ const cookieSession = require("cookie-session");
 const User = require("./models/user");
 const bcrypt = require("bcrypt");
 require("dotenv").config();
-const PORT = process.env.PORT || 8080; 
+const PORT = process.env.PORT || 8080;
 
 connectToDB();
 
-// Middlewares
-app.use(
-  cors({
-    origin: process.env.CLIENT_ORIGIN || "http://localhost:3000",
-  })
-);
+// Middlewares (optimized order)
+app.use(cors({ origin: process.env.CLIENT_ORIGIN || "http://localhost:3000" }));
+app.use(cookieSession({ name: "reciperush-session", keys: ["COOKIE_SECRET"], httpOnly: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(
-  cookieSession({
-    name: "reciperush-session",
-    keys: ["COOKIE_SECRET"],
-    httpOnly: true,
-  })
-);
 
 // Routes
 app.post("/api/create-acc", async (req, res) => {
-  const { email, password, name, username } = req.body;
-
   try {
-    const existingUser = await User.findOne({ email, username }); 
-
-    if (existingUser) {
-      return res.status(400).json({ errorMessage: "User already exists" });
+    // Data validation
+    const { email, password, name, username } = req.body;
+    if (!email || !password || !name || !username) {
+      return res.json({ errMessage: "Please fill in all required fields" }).status(400);
     }
 
-    // const saltRounds = 10;
-    // const hashedPassword = await bcrypt.hash(password, saltRounds);
+    // Check for existing user
+    const existingUser = await User.findOne({ email, username });
+    if (existingUser) {
+      return res.json({ errMessage: "User already exists" }).status(400)
+    }
 
-    const newUser = new User({ email, password: password, username, name });
+    // Hash password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Create new user
+    const newUser = new User({ email, password: hashedPassword, name, username });
     await newUser.save();
 
     res.json({ successMessage: "Created account successfully!" }).status(201);
   } catch (error) {
     console.error("Error creating user:", error);
-    res.status(500).json({ errorMessage: "Failed to create user" });
+    res.json({ errMessage: "Failed to create user. Please double-check username or email, maybe it's already in use." }).status(500);
   }
 });
 
