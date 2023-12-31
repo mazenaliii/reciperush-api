@@ -1,49 +1,39 @@
 const express = require("express");
 const app = express();
-const mongoose = require("mongoose");
-const connectToDB = require("./database");
-const cors = require("cors");
-const cookieSession = require("cookie-session");
+const connectToDB = require("./config/database");
 const User = require("./models/user");
 const bcrypt = require("bcrypt");
+const setCookieSession = require('./middlewares/cookieSession')
+const setCors = require('./middlewares/cors')
+const authMiddleware = require('./middlewares/userAuth')
+const cookieParser = require('cookie-parser')
 require("dotenv").config();
 const PORT = process.env.PORT || 8080;
+
+// routers 
+const createAcc = require('./routes/createAcc')
+const login = require('./routes/login')
 
 connectToDB();
 
 // Middlewares (optimized order)
-app.use(cors({ origin: process.env.CLIENT_ORIGIN || "http://localhost:3000" }));
-app.use(cookieSession({ name: "reciperush-session", keys: ["COOKIE_SECRET"], httpOnly: true }));
+app.use(setCors);
+app.use(setCookieSession);
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+
 // Routes
-app.post("/api/create-acc", async (req, res) => {
-  try {
-    // Data validation
-    const { email, password, name, username } = req.body;
-    if (!email || !password || !name || !username) {
-      return res.json({ errMessage: "Please fill in all required fields" }).status(400);
-    }
+app.use("/api", createAcc);
+app.use("/api", login);
 
-    // Check for existing user
-    const existingUser = await User.findOne({ email, username });
-    if (existingUser) {
-      return res.json({ errMessage: "User already exists" }).status(400)
-    }
-
-    // Hash password
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-    // Create new user
-    const newUser = new User({ email, password: hashedPassword, name, username });
-    await newUser.save();
-
-    res.json({ successMessage: "Created account successfully!" }).status(201);
-  } catch (error) {
-    console.error("Error creating user:", error);
-    res.json({ errMessage: "Failed to create user. Please double-check username or email, maybe it's already in use." }).status(500);
+// auth middleware 
+app.use((req, res, next) => {
+  if (req.path !== '/api/create-acc') {  
+    authMiddleware(req, res, next);
+  } else {
+    next();
   }
 });
 
