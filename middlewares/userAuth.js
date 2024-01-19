@@ -1,20 +1,24 @@
 const jwt = require('jsonwebtoken');
-require('dotenv').config()
+require('dotenv').config();
 
 function authMiddleware(req, res, next) {
-    const token = req.cookies.jwt;
-    if (!token) {
-      return res.status(401).json({ errMessage: "Unauthorized" });
-    }
-  
-    const decode = jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-      if (err) {
-        return res.status(401).json({ errMessage: "Invalid token" });
-      }
-      req.user = decoded; // Attach user information to request object
-      next();
-    });
-    console.log(decode)
+  // Access token from the Authorization header (not localStorage)
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    // Send appropriate unauthorized response
+    return res.status(401).json({ message: 'Unauthorized' });
   }
 
-  module.exports = authMiddleware
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    // Handle invalid or expired token
+    return res.status(401).json({ message: 'Invalid token' });
+  }
+}
+
+module.exports = authMiddleware;
