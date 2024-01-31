@@ -3,12 +3,12 @@ require('dotenv').config();
 
 function authMiddleware(req, res, next) {
   // Access token from the Authorization header (not localStorage)
-  const authHeader = req.headers['authorization'];
+  const authHeader = req.headers['Authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
     // Send appropriate unauthorized response
-    return res.status(401).json({ message: 'Unauthorized' });
+    return res.status(401).json({ errMessage: 'Unauthorized' });
   }
 
   try {
@@ -17,7 +17,7 @@ function authMiddleware(req, res, next) {
     next();
   } catch (error) {
     // Handle invalid or expired token
-    return res.status(401).json({ message: 'Invalid token' });
+    return res.status(401).json({ errMessage: 'Invalid token' });
   }
 }
 

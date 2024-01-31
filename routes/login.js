@@ -26,11 +26,12 @@ router.post("/login", async (req, res) => {
       .json({
         successMessage: "Logged in successfully. Welcome back!",
         token,
+        loggedIn: true
       })
       .status(200);
   } catch (error) {
     console.error(error);
-    res.json({ errMessage: "Failed to login user. Server error." }).status(500);
+    res.json({ errMessage: "Failed to login user. Server error.", loggedIn: false, }).status(500);
   }
 });
 
