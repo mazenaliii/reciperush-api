@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
@@ -36,3 +37,43 @@ router.post("/login", async (req, res) => {
 });
 
 module.exports = router;
+=======
+const express = require("express");
+const router = express.Router();
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
+const User = require("../models/user");
+
+router.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email }).select("+password").lean();
+
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.json({ errMessage: "Invalid email or password" }).status(401);
+    }
+
+    const token = jwt.sign(
+      {
+        userId: user._id,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: 7 * 24 * 60 * 60 }
+    );
+
+    res
+      .json({
+        successMessage: "Logged in successfully. Welcome back!",
+        token,
+        loggedIn: true
+      })
+      .status(200);
+  } catch (error) {
+    console.error(error);
+    res.json({ errMessage: "Failed to login user. Server error.", loggedIn: false, }).status(500);
+  }
+});
+
+module.exports = router;
+>>>>>>> 7ac540cd5ea224c7d6586b2dce3634c42b7e52be

@@ -12,6 +12,10 @@
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.1.1",
+<<<<<<< HEAD
+    "body-parser": "^1.20.2",
+=======
+>>>>>>> 7ac540cd5ea224c7d6586b2dce3634c42b7e52be
     "chalk": "^4.1.2",
     "cookie-parser": "^1.4.6",
     "cookie-session": "^2.0.0",
@@ -21,6 +25,7 @@
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.0.3",
-    "nodemon": "^3.0.2"
+    "nodemon": "^3.0.2",
+    "yup": "^1.4.0"
   }
 }
