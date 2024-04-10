@@ -38,3 +38,4 @@ router.post('/create-acc' , async (req, res) => {
       }
 })
 
+module.exports = router;
